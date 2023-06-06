@@ -262,9 +262,23 @@ public class BackgroundService extends Service implements MethodChannel.MethodCa
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        if (isRunning.get()) {
-            WatchdogReceiver.enqueue(getApplicationContext(), 1000);
+        isManuallyStopped = true;
+        WatchdogReceiver.remove(this);
+
+    try {
+        synchronized (listeners) {
+            for (Integer key : listeners.keySet()) {
+                IBackgroundService listener = listeners.get(key);
+                if (listener != null) {
+                    listener.stop();
+                }
+            }
         }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    stopSelf();
     }
 
     @Override
